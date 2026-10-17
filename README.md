@@ -111,6 +111,19 @@ pattern as both siblings'. Redacts PII in tool output in place and
 reports findings (entity type, never the matched value) the same way
 `secret-guard` does. Fails open if the daemon is unreachable.
 
+**Bash only** — Claude Code's `updatedToolOutput` schema is per tool,
+and only Bash's shape (a structured object, not a bare string) is
+confirmed from the docs. Read/Grep/WebFetch pass through unguarded
+rather than risk a silent no-op on an unconfirmed shape — found while
+building [claude-plugin-guards](https://github.com/gramatr/claude-plugin-guards),
+fixed here too.
+
+If you're also running secret-guard and/or injection-guard, prefer
+`claude-plugin-guards`' combined hook over wiring this adapter
+independently alongside theirs on the same matcher — Claude Code runs
+same-event hooks in parallel with an undefined resolution order when
+more than one returns `updatedToolOutput` for the same call.
+
 ## Licensing
 
 Presidio itself: MIT. The default NER backend, spaCy's `en_core_web_lg`:
