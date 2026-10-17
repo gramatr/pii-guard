@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # Public repo — see github-actions-runner-policy (grāmatr standard):
+    # arc-runner-gramatr refuses jobs from public repos, so this stays on
+    # GitHub-hosted ubuntu-latest, which public repos get free.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Sync dependencies
+        run: uv sync --frozen
+
+      - name: Download spaCy model
+        run: uv run python -m spacy download en_core_web_lg
+
+      - name: Run daemon tests (no model-accuracy assertions, fail fast on these)
+        run: uv run pytest tests/test_daemon.py -v
+
+      - name: Run engine tests (real Presidio + spaCy detection/redaction)
+        run: uv run pytest tests/test_engine.py -v
+
+      - name: Run entity-coverage eval
+        working-directory: eval
+        run: uv run python compare_configs.py
