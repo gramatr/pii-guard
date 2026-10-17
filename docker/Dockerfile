@@ -3,8 +3,13 @@
 # Unlike injection-guard, there is no license gate on the default model
 # (en_core_web_lg is MIT, downloads anonymously — see README "Licensing"),
 # which removes injection-guard's *reason* for deferring the download to
-# container startup. So this bakes the model in at BUILD time instead —
-# container startup has no network dependency on anything at all.
+# container startup. en_core_web_lg is a direct pip dependency (see
+# pyproject.toml) — `uv sync` pulls it like any other package, baked
+# into the image at build time, no separate download step. (It used to
+# be a separate `spacy download` RUN line here; that masked a real
+# packaging gap — `uv tool install` has no equivalent manual step, so
+# the daemon crash-looped on first real install outside this
+# Dockerfile. Fixed at the dependency level instead, see pyproject.toml.)
 
 FROM python:3.12-slim
 
@@ -16,9 +21,6 @@ COPY src/ ./src/
 
 RUN uv sync --frozen --no-dev
 ENV PATH="/app/.venv/bin:$PATH"
-
-# Baked in at build time, not pulled at startup — see header comment.
-RUN python -m spacy download en_core_web_lg
 
 # config.py's default (127.0.0.1) is correct for a non-containerized
 # direct run; wrong inside a container, for the same reason documented
