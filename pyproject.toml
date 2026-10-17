@@ -11,6 +11,13 @@ dependencies = [
   "presidio-analyzer>=2.2",
   "presidio-anonymizer>=2.2",
   "spacy>=3.7",
+  # en_core_web_lg as a direct pip dependency (its published wheel URL),
+  # NOT a separate `spacy download` step — found the hard way: `uv tool
+  # install` only installs what's declared here. A manual post-install
+  # download step (what every test in this repo's history actually
+  # ran) has no equivalent for `uv tool install`, so the daemon crash-
+  # looped on first real install with no model present at all.
+  "en-core-web-lg @ https://github.com/explosion/spacy-models/releases/download/en_core_web_lg-3.8.0/en_core_web_lg-3.8.0-py3-none-any.whl",
 ]
 
 [project.scripts]
@@ -24,6 +31,14 @@ dev = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pii_guard"]
+
+[tool.hatch.metadata]
+# Required for the en-core-web-lg direct-URL dependency above. This
+# package is only ever installed via `uv tool install git+https://...`
+# or from this source tree, never published to PyPI, so hatchling's
+# default restriction on direct references doesn't protect anything
+# meaningful here.
+allow-direct-references = true
 
 [build-system]
 requires = ["hatchling"]

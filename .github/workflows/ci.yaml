@@ -17,11 +17,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
 
-      - name: Sync dependencies
+      - name: Sync dependencies (en_core_web_lg is a direct dependency, no separate download step)
         run: uv sync --frozen
-
-      - name: Download spaCy model
-        run: uv run python -m spacy download en_core_web_lg
 
       - name: Run daemon tests (no model-accuracy assertions, fail fast on these)
         run: uv run pytest tests/test_daemon.py -v
